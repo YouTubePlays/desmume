@@ -3178,7 +3178,7 @@ common_gtk_main( class configured_features *my_config)
         return 1;
     }
     desmume_init( my_config->disable_sound || !config.audio_enabled);
-    Init();
+    Init( my_config->button_port);
 
     /* Init the hud / osd stuff */
 #ifdef HAVE_LIBAGG

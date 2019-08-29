@@ -80,7 +80,7 @@ void acceptAndListen() {
     }
 }
 
-void Init() {    
+void Init(int port) {    
     socketfd = socket(AF_INET, SOCK_STREAM, 0);
     if (socketfd <= 0) {
         perror("socket failed"); 
@@ -93,9 +93,10 @@ void Init() {
         perror("setsockopt"); 
         exit(EXIT_FAILURE); 
     } 
+    printf("port:%d\n", port);
     address.sin_family = AF_INET; 
     address.sin_addr.s_addr = INADDR_ANY; 
-    address.sin_port = htons( PORT ); 
+    address.sin_port = htons( port ); 
 
     // Forcefully attaching socket to the port 8080 
     if (bind(socketfd, (struct sockaddr *)&address,  

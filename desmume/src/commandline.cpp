@@ -69,6 +69,7 @@ CommandLine::CommandLine()
 , _console_type(NULL)
 , _advanscene_import(NULL)
 , load_slot(-1)
+, button_port(27015)
 , arm9_gdb_port(0)
 , arm7_gdb_port(0)
 , start_paused(FALSE)
@@ -228,6 +229,8 @@ ENDL
 
 #define OPT_ADVANSCENE 900
 
+#define OPT_BUTTON_PORT 1000
+
 bool CommandLine::parse(int argc,char **argv)
 {
 	std::string _render3d;
@@ -243,6 +246,7 @@ bool CommandLine::parse(int argc,char **argv)
 			{ "help", no_argument, &opt_help, 1 },
 
 			//user settings
+			{ "button-port", required_argument, NULL, OPT_BUTTON_PORT },
 			{ "num-cores", required_argument, NULL, OPT_NUMCORES },
 			{ "spu-synch", no_argument, &_spu_sync_mode, 1 },
 			{ "spu-method", required_argument, NULL, OPT_SPU_METHOD },
@@ -327,6 +331,7 @@ bool CommandLine::parse(int argc,char **argv)
 		case 0: break;
 
 		//user settings
+		case OPT_BUTTON_PORT: button_port = atoi(optarg); break;
 		case OPT_NUMCORES: _num_cores = atoi(optarg); break;
 		case OPT_SPU_METHOD: _spu_sync_method = atoi(optarg); break;
 		case OPT_3D_RENDER: _render3d = optarg; break;

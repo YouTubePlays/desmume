@@ -43,6 +43,7 @@ class CommandLine
 {
 public:
 	//actual options: these may move to another struct
+	int button_port;
 	int load_slot;
 	int autodetect_method;
 	int render3d;
@@ -98,6 +99,7 @@ private:
 	int _bios_swi;
 	int _spu_advanced;
 	int _num_cores;
+	int _button_port;
 	int _rigorous_timing;
 	int _advanced_timing;
 	int _gamehacks;
