@@ -40,6 +40,7 @@
 #include "MMU.h"
 #include "render3D.h"
 #include "desmume.h"
+#include "server.h"
 #include "debug.h"
 #include "rasterize.h"
 #include "saves.h"
@@ -2625,6 +2626,7 @@ static void Start_dTool(GtkWidget *widget, gpointer data)
 
 void dTool_CloseCallback(int tool)
 {
+    Destroy();
     if (dTools_running == NULL)
         return;
 
@@ -2743,9 +2745,10 @@ gboolean EmuLoop(gpointer data)
 
     /* Merge the joystick keys with the keyboard ones */
     process_joystick_events(&keys_latch);
+    Run(&keys_latch);
     /* Update! */
     update_keypad(keys_latch);
-
+    
     desmume_cycle();    /* Emule ! */
 
     _updateDTools();
@@ -3174,6 +3177,7 @@ common_gtk_main( class configured_features *my_config)
         return 1;
     }
     desmume_init( my_config->disable_sound || !config.audio_enabled);
+    Init();
 
     /* Init the hud / osd stuff */
 #ifdef HAVE_LIBAGG
