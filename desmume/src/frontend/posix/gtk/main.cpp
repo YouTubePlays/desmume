@@ -2743,9 +2743,10 @@ gboolean EmuLoop(gpointer data)
 	Hud.cpuloopIterationCount = nds.cpuloopIterationCount;
 #endif
 
+    Run(&keys_latch);
     /* Merge the joystick keys with the keyboard ones */
     process_joystick_events(&keys_latch);
-    Run(&keys_latch);
+    //printf("keys_latch:%d\n", keys_latch);
     /* Update! */
     update_keypad(keys_latch);
     

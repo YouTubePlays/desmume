@@ -7,24 +7,7 @@
 #include <thread>
 #include "../NDSSystem.h"
 
-#define KEY_NONE		0
-#define KEY_A			1
-#define KEY_B			2
-#define KEY_SELECT		3
-#define KEY_START		4
-#define KEY_RIGHT		5
-#define KEY_LEFT		6
-#define KEY_UP			7
-#define KEY_DOWN		8
-#define KEY_R			9
-#define KEY_L			10
-#define KEY_X			11
-#define KEY_Y			12
-#define KEY_DEBUG		13
-#define KEY_BOOST		14
-#define KEY_LID			15
-
-#define PORT 25018
+#define PORT 27015
 
 bool running;
 int socketfd, new_socket;
@@ -34,6 +17,11 @@ std::thread* acceptor;
 int opt = 1; 
 
 char buffer[1024] = {0}; 
+
+unsigned short key_state = 0;
+bool touched = false;
+int x = 0;
+int y = 0;
 
 void acceptAndListen() {
     while(running) {
@@ -46,9 +34,49 @@ void acceptAndListen() {
         } 
         
         printf("Accepted\n");
-        while(read( new_socket , buffer, 1024)) {
-            printf("%s\n",buffer ); 
+        key_state = 0;
+        int b = 0;
+        while(true) {
+            int r = read( new_socket , buffer, 1024);
+            printf("r: %d\n", r);
+            if (r == 0 || r == -1) {
+                break;
+            }
+            b += r;
+            printf("Read\n");
+            if (b >= 4) {
+                char type = buffer[0];
+                if (type == 0) {
+                    //HANDLE TOUCH
+                    char value = buffer[1];
+                    printf("type:%d,value:%d\n", type, value);
+                    if (value > 0) {
+                        int x = buffer[2];
+                        int y = buffer[3];
+                        printf("x:%d,y:%d\n", x, y);
+                        NDS_setTouchPos(x, y);
+                    } else {
+                        NDS_releaseTouch();
+                    }
+                } else {
+                    //HANDLE BUTTON
+                    char value = buffer[1];
+                    printf("type:%d,value:%d\n", type, value);
+                    if (value > 0) {
+                        key_state |= (1 << (type-1)); 
+                    } else {
+                        key_state &=  0xFF ^ (1 << (type-1));
+                    }
+                    printf("state:%02x\n", key_state);
+                }
+                b -= 4;
+                for (int i = 0;  i < b; i++) {
+                    buffer[i] = buffer[i+4];
+                }
+            }
         }
+        printf("Close\n");
+        close(new_socket);
     }
 }
 
@@ -87,7 +115,9 @@ void Init() {
 }
 
 void Run(unsigned short* keys) {
-    // //printf("TEST%d\n", b);
+    (*keys) = key_state;
+
+    //printf("keys:%d\n", (*keys));
     // b += 1;
 
     // if (b>100) {
@@ -107,6 +137,5 @@ void Run(unsigned short* keys) {
 
 void Destroy() {
     running = false;
-    close(new_socket);
     acceptor->join();
 }
