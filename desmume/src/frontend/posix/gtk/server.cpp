@@ -9,6 +9,8 @@
 
 #define PORT 27015
 
+int frame_count;
+int o_port;
 bool running;
 int socketfd, new_socket;
 struct sockaddr_in address; 
@@ -30,7 +32,9 @@ void acceptAndListen() {
                         (socklen_t*)&addrlen))<0) 
         { 
             perror("accept"); 
-            exit(EXIT_FAILURE); 
+            Init(o_port);
+            continue;
+            //exit(EXIT_FAILURE); 
         } 
         
         printf("Accepted\n");
@@ -80,7 +84,9 @@ void acceptAndListen() {
     }
 }
 
-void Init(int port) {    
+void Init(int port) { 
+    frame_count = 0;
+    o_port = port;   
     socketfd = socket(AF_INET, SOCK_STREAM, 0);
     if (socketfd <= 0) {
         perror("socket failed"); 
@@ -115,25 +121,18 @@ void Init(int port) {
     acceptor = new std::thread(acceptAndListen);
 }
 
-void Run(unsigned short* keys) {
+int slot = 0;
+int Run(unsigned short* keys) {
     (*keys) = key_state;
 
-    //printf("keys:%d\n", (*keys));
-    // b += 1;
+    if (frame_count == 60 * 60 * 30) {
+        frame_count = 0;
+        slot = (slot % 6) + 1;
+        return slot;
+    }
+    frame_count ++;
 
-    // if (b>100) {
-    //     b = -100;
-    // }
-    
-    // if (b>0) {
-    //     printf("TEST%d\n", 1 << KEY_DOWN);
-    //     NDS_setTouchPos(128, 96);
-    //     (*keys) |= 128;
-    // } else {
-    //     printf("TEST%d\n", 0);
-    //     NDS_releaseTouch();
-    //     (*keys) = 0;
-    // }
+    return 0;
 }
 
 void Destroy() {

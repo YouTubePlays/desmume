@@ -2742,13 +2742,16 @@ gboolean EmuLoop(gpointer data)
 	}
 	Hud.cpuloopIterationCount = nds.cpuloopIterationCount;
 #endif
-
-    Run(&keys_latch);
+    u16 remote_keys = 0;
+    int slot = Run(&remote_keys);
+    if(slot) {
+        savegame(slot);
+    }
     /* Merge the joystick keys with the keyboard ones */
     process_joystick_events(&keys_latch);
     //printf("keys_latch:%d\n", keys_latch);
     /* Update! */
-    update_keypad(keys_latch);
+    update_keypad(keys_latch | remote_keys);
     
     desmume_cycle();    /* Emule ! */
 
