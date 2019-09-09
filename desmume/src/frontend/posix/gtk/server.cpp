@@ -25,6 +25,38 @@ bool touched = false;
 int x = 0;
 int y = 0;
 
+void setupSocket(int port) {
+    socketfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (socketfd <= 0) {
+        perror("socket failed"); 
+        exit(EXIT_FAILURE);
+    }
+
+    if (setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, 
+                                                  &opt, sizeof(opt))) 
+    { 
+        perror("setsockopt"); 
+        exit(EXIT_FAILURE); 
+    } 
+    printf("port:%d\n", port);
+    address.sin_family = AF_INET; 
+    address.sin_addr.s_addr = INADDR_ANY; 
+    address.sin_port = htons( port ); 
+
+    // Forcefully attaching socket to the port 8080 
+    if (bind(socketfd, (struct sockaddr *)&address,  
+                                 sizeof(address))<0) 
+    { 
+        perror("bind failed"); 
+        exit(EXIT_FAILURE); 
+    } 
+    if (listen(socketfd, 3) < 0) 
+    { 
+        perror("listen"); 
+        exit(EXIT_FAILURE); 
+    } 
+}
+
 void acceptAndListen() {
     while(running) {
         printf("Accepting\n");
@@ -32,7 +64,9 @@ void acceptAndListen() {
                         (socklen_t*)&addrlen))<0) 
         { 
             perror("accept"); 
-            Init(o_port);
+            close(socketfd);
+            //close(new_socket);
+            setupSocket(o_port);
             continue;
             //exit(EXIT_FAILURE); 
         } 
@@ -41,14 +75,14 @@ void acceptAndListen() {
         key_state = 0;
         int b = 0;
         while(true) {
-            int r = read( new_socket , buffer, 1024);
+            int r = read( new_socket , buffer + b, 1024 - b);
             printf("r: %d\n", r);
             if (r == 0 || r == -1) {
                 break;
             }
             b += r;
             printf("Read\n");
-            if (b >= 4) {
+            while (b >= 4) {
                 char type = buffer[0];
                 if (type == 0) {
                     //HANDLE TOUCH
@@ -87,36 +121,7 @@ void acceptAndListen() {
 void Init(int port) { 
     frame_count = 0;
     o_port = port;   
-    socketfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (socketfd <= 0) {
-        perror("socket failed"); 
-        exit(EXIT_FAILURE);
-    }
-
-    if (setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, 
-                                                  &opt, sizeof(opt))) 
-    { 
-        perror("setsockopt"); 
-        exit(EXIT_FAILURE); 
-    } 
-    printf("port:%d\n", port);
-    address.sin_family = AF_INET; 
-    address.sin_addr.s_addr = INADDR_ANY; 
-    address.sin_port = htons( port ); 
-
-    // Forcefully attaching socket to the port 8080 
-    if (bind(socketfd, (struct sockaddr *)&address,  
-                                 sizeof(address))<0) 
-    { 
-        perror("bind failed"); 
-        exit(EXIT_FAILURE); 
-    } 
-    if (listen(socketfd, 3) < 0) 
-    { 
-        perror("listen"); 
-        exit(EXIT_FAILURE); 
-    } 
-
+    setupSocket(port);
     running = true;
     acceptor = new std::thread(acceptAndListen);
 }
